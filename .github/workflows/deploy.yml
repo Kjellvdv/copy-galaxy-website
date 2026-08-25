@@ -44,12 +44,14 @@ jobs:
           # TEMP DIAGNOSTIC: have lftp report the certificate it is shown, and
           # confirm the credentials work, with verification off for this probe only.
           echo "--- probe ---"
-          lftp -d -c "
+          lftp -c "
             set ftp:ssl-force true;
             set ssl:verify-certificate no;
             open --env-password -u '${FTP_USER}' '${FTP_HOST}';
-            cls -1 '${FTP_TARGET_DIR}';
-          " 2>&1 | grep -iE "certificate|subject|issuer|CN *=|verify|230 |530 " | head -25 || true
+            echo '== pwd ==';   pwd;
+            echo '== ls / =='; cls -l /;
+            echo '== ls target =='; (cls -l '${FTP_TARGET_DIR}' || echo 'TARGET DOES NOT EXIST');
+          " 2>&1 | grep -viE "certificate|^WARNING" | head -40 || true
           echo "--- end probe ---"
 
           # mirror --reverse --delete makes the remote directory match dist/
