@@ -1,6 +1,6 @@
 # The Copy Galaxy
 
-A public swipe file of web design patterns. Astro + Tailwind, static output, deployed to SiteGround.
+A public swipe file of web design patterns. Astro + Tailwind, static output, published to GitHub Pages.
 
 Replaces the WordPress site that was at thecopygalaxy.com. Only the Best Practices Swipe File was
 carried over; the blog posts and other pages were dropped deliberately.
@@ -52,30 +52,34 @@ get. Crop tight to the pattern.
 
 ## Deploying
 
-`git push` to `main` runs `.github/workflows/deploy.yml`, which builds and mirrors `dist/` to
-SiteGround over FTPS.
+`git push` to `main` runs `.github/workflows/deploy.yml`, which builds the site and publishes it to
+GitHub Pages. There are no secrets and nothing to configure — the repo is public, which is what
+lets Pages build it without a paid plan.
 
-**Before the first deploy**, set these in the GitHub repo yourself:
+The custom domain is bound by `public/CNAME`, which Astro copies into `dist/` and the workflow
+ships inside the Pages artifact. Keep that file. Setting the domain only in repo settings can be
+cleared by a later deploy that ships no `CNAME`.
 
-| Where | Name | Value |
-|---|---|---|
-| Settings → Secrets and variables → Actions → **Secrets** | `FTP_HOST` | your SiteGround FTP hostname |
-| | `FTP_USER` | the FTP account username |
-| | `FTP_PASSWORD` | that account's password |
-| Same page → **Variables** | `FTP_TARGET_DIR` | e.g. `/public_html/new` |
+DNS lives in SiteGround (`ns1/ns2.siteground.net`) under Domain → DNS Zone Editor. The apex points
+at GitHub's four Pages addresses and `www` is a CNAME to `kjellvdv.github.io`:
 
-Create the FTP account in SiteGround Site Tools under Site → FTP Accounts.
+```
+185.199.108.153
+185.199.109.153
+185.199.110.153
+185.199.111.153
+```
 
-`FTP_TARGET_DIR` is a variable rather than a secret so it's visible in the UI, because getting it
-wrong is the one thing that can do damage: the deploy runs `lftp mirror --reverse --delete`, which
-makes that directory match `dist/` exactly and removes anything else in it. Point it at a staging
-folder first. Only change it to `/public_html` once you've clicked through the staging copy and
-have a backup of the WordPress install.
+### Why not SiteGround
 
-### Deploying without GitHub secrets
+The site was originally set up to deploy over FTPS to SiteGround, where the old WordPress install
+still sits in `/thecopygalaxy.com/public_html`. That was abandoned: SiteGround's FTP server presents
+a certificate issued for its own host, and neither `thecopygalaxy.com` nor `ftp.thecopygalaxy.com`
+matches it, so a *verified* connection isn't reachable from the customer side. The only ways
+forward were disabling certificate verification while keeping a deploy password in CI, or mirroring
+with `--delete` over a live document root. Pages avoids both.
 
-`npm run deploy` does the same mirror from your machine, reading credentials from a gitignored
-`.env.deploy` (see the header of `scripts/deploy.sh`). Needs `lftp` (`brew install lftp`).
+WordPress was never deleted, so putting the old A records back brings it straight back.
 
 ## Regenerating the social card
 
