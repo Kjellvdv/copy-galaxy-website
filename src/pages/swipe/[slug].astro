@@ -1,0 +1,165 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Starfield from '../../components/Starfield.astro';
+import SwipeCard from '../../components/SwipeCard.astro';
+import { getCategory } from '../../config/categories';
+import { getIndustry } from '../../config/industries';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('swipe');
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry, entries } }));
+}
+
+const { entry, entries } = Astro.props;
+const { title, company, url, category, industry, tags, screenshot, extras, video, added } = entry.data;
+const cat = getCategory(category);
+const ind = getIndustry(industry);
+const { Content } = await render(entry);
+
+const related = entries
+  .filter((e) => e.id !== entry.id && e.data.category === category)
+  .sort((a, b) => b.data.added.valueOf() - a.data.added.valueOf())
+  .slice(0, 3);
+
+const host = new URL(url).hostname.replace(/^www\./, '');
+const dateLabel = added.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+---
+
+<BaseLayout
+  title={`${title} — ${company} | The Copy Galaxy`}
+  description={`How ${company} (${ind.label}) handles ${cat.label}, picked apart. A ${cat.label} example from The Copy Galaxy swipe file.`}
+>
+  <!-- One background for the whole page, fixed behind the content. -->
+  <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+    <div class="nebula absolute inset-x-0 top-0 h-[80vh]"></div>
+    <Starfield count={70} class="opacity-70" />
+  </div>
+
+  <div class="relative z-10">
+    <nav class="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
+      <a
+        href="/"
+        class="group inline-flex items-center gap-2 font-mono text-sm text-haze transition hover:text-chalk"
+      >
+        <span class="transition group-hover:-translate-x-0.5">&larr;</span> back to the galaxy
+      </a>
+      <a
+        href={`/?c=${category}`}
+        class="font-mono text-xs lowercase text-haze transition hover:text-chalk"
+        style={`--accent:${cat.accent}`}
+      >
+        <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle" style="background:var(--accent)"></span>
+        {cat.label}
+      </a>
+    </nav>
+
+    <header class="relative z-10 mx-auto max-w-5xl px-6 pb-12 pt-6">
+      <h1 class="text-balance text-3xl font-semibold leading-tight tracking-tight text-star sm:text-5xl">
+        {title}
+      </h1>
+      <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm text-haze">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 text-chalk underline decoration-plasma/60 underline-offset-4 transition hover:decoration-plasma"
+        >
+          {company}
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M7 17 17 7M9 7h8v8"></path>
+          </svg>
+        </a>
+        <span class="text-haze/50">{host}</span>
+        <a
+          href={`/?q=${encodeURIComponent(ind.label)}`}
+          class="text-haze/70 transition hover:text-chalk"
+        >
+          {ind.label}
+        </a>
+        <span class="text-haze/50">spotted {dateLabel}</span>
+      </div>
+    </header>
+
+    <main id="main" class="mx-auto max-w-5xl px-6 pb-24">
+    <figure class="overflow-hidden rounded-2xl border border-edge bg-surface">
+      {
+        video ? (
+          <video
+            src={video}
+            poster={screenshot.src}
+            controls
+            loop
+            muted
+            playsinline
+            preload="none"
+            class="w-full"
+            aria-label={`${company}: ${title}`}
+          />
+        ) : (
+          <Image
+            src={screenshot}
+            alt={`${company}: ${title}`}
+            widths={[640, 960, 1400]}
+            sizes="(max-width: 1024px) 92vw, 1000px"
+            loading="eager"
+            class="w-full"
+          />
+        )
+      }
+    </figure>
+
+    {
+      extras.map((img) => (
+        <figure class="mt-4 overflow-hidden rounded-2xl border border-edge bg-surface">
+          <Image
+            src={img}
+            alt={`${company}: ${title}, another angle`}
+            widths={[640, 960, 1400]}
+            sizes="(max-width: 1024px) 92vw, 1000px"
+            loading="lazy"
+            class="w-full"
+          />
+        </figure>
+      ))
+    }
+
+    <div class="prose-swipe mt-10 text-lg text-haze">
+      <Content />
+    </div>
+
+    {
+      tags.length > 0 && (
+        <ul class="mt-8 flex flex-wrap gap-2">
+          {tags.map((t) => (
+            <li>
+              <a
+                href={`/?q=${encodeURIComponent(t)}`}
+                class="inline-block rounded-full border border-edge bg-surface/60 px-3 py-1 font-mono text-xs text-haze transition hover:border-plasma/60 hover:text-chalk"
+              >
+                {t}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      related.length > 0 && (
+        <section class="mt-20">
+          <h2 class="mb-5 font-mono text-sm lowercase tracking-wide text-haze">
+            more {cat.label}
+          </h2>
+          <div class="columns-1 gap-4 sm:columns-2 lg:columns-3">
+            {related.map((e) => (
+              <SwipeCard entry={e} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+    </main>
+  </div>
+</BaseLayout>

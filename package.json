@@ -1,0 +1,21 @@
+{
+  "name": "copy-galaxy-website",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "deploy": "bash scripts/deploy.sh",
+    "og": "node scripts/make-og.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.2.6",
+    "sharp": "^0.34.2",
+    "tailwindcss": "^4.3.3"
+  }
+}

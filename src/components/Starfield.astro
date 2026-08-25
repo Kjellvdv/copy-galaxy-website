@@ -1,0 +1,42 @@
+---
+/**
+ * Deterministic starfield. Seeded so the sky is identical on every build —
+ * an SVG that reshuffles each deploy would churn the diff for no reason.
+ */
+interface Props { count?: number; class?: string }
+const { count = 140, class: className = '' } = Astro.props;
+
+let seed = 20260825;
+const rand = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+
+const stars = Array.from({ length: count }, () => {
+  const r = rand();
+  return {
+    x: +(rand() * 100).toFixed(2),
+    y: +(rand() * 100).toFixed(2),
+    // Most stars are faint specks; a few are bright enough to notice.
+    size: +(r < 0.86 ? 0.6 + rand() * 0.6 : 1.3 + rand() * 1.1).toFixed(2),
+    opacity: +(0.2 + rand() * 0.55).toFixed(2),
+    twinkle: rand() < 0.18 ? ['star-a', 'star-b', 'star-c'][Math.floor(rand() * 3)] : '',
+  };
+});
+---
+
+<svg
+  class={`pointer-events-none absolute inset-0 h-full w-full ${className}`}
+  viewBox="0 0 100 100"
+  preserveAspectRatio="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  {stars.map((s) => (
+    <circle
+      cx={s.x}
+      cy={s.y}
+      r={s.size / 10}
+      fill="#fff"
+      opacity={s.opacity}
+      class={s.twinkle}
+    />
+  ))}
+</svg>

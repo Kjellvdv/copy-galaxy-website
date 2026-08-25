@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-void:      #05060f;
+  --color-deep:      #0a0c1c;
+  --color-surface:   #11142a;
+  --color-edge:      #1e2242;
+  --color-haze:      #8b91b8;
+  --color-chalk:     #e8eaf6;
+  --color-star:      #ffffff;
+  --color-plasma:    #7c8cff;
+  --color-plasma-2:  #c084fc;
+  --color-gold:      #f5b942;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--color-void);
+    color: var(--color-chalk);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body { margin: 0; font-family: var(--font-sans); }
+  ::selection { background: var(--color-plasma); color: #fff; }
+
+  /* Focus ring that survives the dark background */
+  :focus-visible {
+    outline: 2px solid var(--color-plasma);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* Gold-led wash for the search card, so the one thing you're meant to touch
+     reads warm against a board that is otherwise blue and near-monochrome. */
+  .nebula-gold {
+    background:
+      radial-gradient(38rem 26rem at 22% 0%, color-mix(in oklab, var(--color-gold) 26%, transparent), transparent 62%),
+      radial-gradient(34rem 24rem at 84% 108%, color-mix(in oklab, var(--color-plasma-2) 22%, transparent), transparent 66%),
+      radial-gradient(30rem 20rem at 50% 50%, color-mix(in oklab, var(--color-plasma) 14%, transparent), transparent 72%);
+  }
+
+  /* Nebula wash behind the hero. Two offset radial blooms, no image. */
+  .nebula {
+    background:
+      radial-gradient(60rem 40rem at 18% -10%, color-mix(in oklab, var(--color-plasma) 26%, transparent), transparent 60%),
+      radial-gradient(50rem 34rem at 88% 8%,  color-mix(in oklab, var(--color-plasma-2) 20%, transparent), transparent 62%),
+      radial-gradient(40rem 30rem at 50% 40%, color-mix(in oklab, #2dd4bf 10%, transparent), transparent 70%);
+  }
+
+  /* Card hover: lift + the screenshot creeps up to reveal more of the page. */
+  .swipe-card { transition: transform .35s cubic-bezier(.2,.7,.3,1), border-color .35s, box-shadow .35s; }
+  .swipe-card:hover { transform: translateY(-4px); }
+  .swipe-card img { transition: transform .6s cubic-bezier(.2,.7,.3,1); }
+  .swipe-card:hover img { transform: scale(1.03); }
+
+  .prose-swipe :where(p) { margin-block: 0 1rem; line-height: 1.7; }
+  .prose-swipe :where(ul) { margin-block: 0 1rem; padding-left: 1.15rem; list-style: none; }
+  .prose-swipe :where(li) { position: relative; line-height: 1.7; margin-block: .3rem; }
+  .prose-swipe :where(li)::before {
+    content: "";
+    position: absolute; left: -1.15rem; top: .68em;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--color-plasma);
+  }
+  .prose-swipe :where(strong) { color: var(--color-star); font-weight: 600; }
+  .prose-swipe :where(a) {
+    color: var(--color-chalk);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--color-plasma) 70%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color .2s, color .2s;
+  }
+  .prose-swipe :where(a:hover) { color: #fff; text-decoration-color: var(--color-plasma); }
+}
+
+/* Twinkle, but only for people who want motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes twinkle { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
+  .star-a { animation: twinkle 4s ease-in-out infinite; }
+  .star-b { animation: twinkle 6s ease-in-out infinite 1.4s; }
+  .star-c { animation: twinkle 8s ease-in-out infinite 2.7s; }
+}

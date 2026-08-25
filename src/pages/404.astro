@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Starfield from '../components/Starfield.astro';
+---
+
+<BaseLayout title="Lost in space | The Copy Galaxy" description="This page drifted off.">
+  <div class="nebula relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 text-center">
+    <Starfield count={200} />
+    <div class="relative z-10">
+      <p class="font-mono text-sm tracking-widest text-haze">404</p>
+      <h1 class="mt-4 text-4xl font-semibold tracking-tight text-star sm:text-5xl">
+        Nothing orbits here
+      </h1>
+      <p class="mx-auto mt-4 max-w-md text-balance text-lg text-haze">
+        This page drifted off, or never existed. The swipe file is still where you left it.
+      </p>
+      <a
+        href="/"
+        class="mt-8 inline-flex items-center gap-2 rounded-xl border border-edge bg-surface px-5 py-3 text-sm text-chalk transition hover:border-plasma/70"
+      >
+        Back to the galaxy
+      </a>
+    </div>
+  </div>
+</BaseLayout>

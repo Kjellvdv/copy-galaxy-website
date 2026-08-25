@@ -1,0 +1,391 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SwipeCard from '../components/SwipeCard.astro';
+import { CATEGORIES } from '../config/categories';
+
+const entries = (await getCollection('swipe')).sort(
+  (a, b) => b.data.added.valueOf() - a.data.added.valueOf(),
+);
+
+const counts = new Map<string, number>();
+for (const e of entries) counts.set(e.data.category, (counts.get(e.data.category) ?? 0) + 1);
+const chips = CATEGORIES.filter((c) => counts.has(c.id));
+
+const placeholders = [
+  'sticky social proof',
+  'fintech',
+  'pricing page',
+  'video testimonial',
+  'insurance',
+  'demo button',
+];
+
+/**
+ * The search sits in the board as a card, not on top of it. Slotting it in after
+ * the first few entries lands it in the second row on every desktop breakpoint,
+ * so cards surround it on all four sides without it dropping below the fold.
+ * On small screens it jumps to the front instead (see .search-card in the styles).
+ */
+const SEARCH_SLOT = 8;
+const before = entries.slice(0, SEARCH_SLOT);
+const after = entries.slice(SEARCH_SLOT);
+---
+
+<BaseLayout
+  title="The Copy Galaxy — a swipe file of web design best practices"
+  description="A searchable swipe file of landing page patterns worth stealing: hero sections, social proof, calls to action, customer profiles, process and pricing. Real examples, screenshotted and picked apart."
+>
+  <nav class="flex items-center justify-between px-4 py-4">
+    <a href="/" class="group flex items-center gap-2.5">
+      <span
+        class="inline-block h-2.5 w-2.5 rounded-full bg-plasma shadow-[0_0_14px_3px] shadow-plasma/60"
+      ></span>
+      <span class="font-mono text-sm tracking-tight text-chalk">the copy galaxy</span>
+    </a>
+    <a
+      href="https://kjellv.com"
+      class="font-mono text-xs text-haze underline decoration-transparent underline-offset-4 transition hover:text-chalk hover:decoration-plasma"
+      >kjellv.com</a
+    >
+  </nav>
+
+  <main id="main">
+    <div id="grid" class="board p-3 pb-24">
+      {before.map((entry) => <SwipeCard entry={entry} eager />)}
+
+      <!-- Same border, radius and surface as every other card. Just bigger. -->
+      <section class="search-card nebula-gold relative overflow-hidden rounded-2xl border border-gold/25 bg-surface" data-measure>
+        <div class="relative flex h-full flex-col justify-center px-5 py-7 text-center sm:px-8 sm:py-9">
+          <h1
+            class="text-balance text-2xl font-semibold leading-[1.12] tracking-tight text-star sm:text-3xl lg:text-4xl"
+          >
+            Web design worth <span class="text-gold">stealing</span>
+          </h1>
+          <p class="mx-auto mt-2.5 max-w-sm text-balance text-sm leading-relaxed text-haze">
+            A public swipe file of landing page patterns I liked enough to screenshot.
+          </p>
+
+          <div class="relative mt-5">
+            <div
+              class="pointer-events-none absolute -inset-2 rounded-2xl bg-gold/25 opacity-0 blur-xl transition-opacity duration-500"
+              data-search-glow
+            >
+            </div>
+            <div class="relative">
+              <svg
+                class="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-haze"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path>
+              </svg>
+              <input
+                id="search"
+                type="search"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Search the swipe file"
+                aria-controls="grid"
+                placeholder="Search 19 examples…"
+                data-placeholders={JSON.stringify(placeholders)}
+                class="w-full rounded-xl border border-edge bg-void/80 py-3 pl-11 pr-11 text-sm text-chalk shadow-lg shadow-void/50 backdrop-blur transition placeholder:text-haze/70 focus:border-gold/80 focus:outline-none sm:text-base"
+              />
+              <kbd
+                class="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded border border-edge bg-surface px-1.5 py-0.5 font-mono text-[11px] text-haze sm:block"
+                >/</kbd
+              >
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center justify-center gap-1.5" data-chips>
+            {
+              chips.map((c) => (
+                <button
+                  type="button"
+                  data-chip={c.id}
+                  aria-pressed="false"
+                  style={`--accent:${c.accent}`}
+                  class="rounded-full border border-edge bg-void/60 px-2.5 py-1 font-mono text-[11px] lowercase text-haze transition hover:border-[var(--accent)] hover:text-chalk aria-pressed:border-[var(--accent)] aria-pressed:bg-[var(--accent)]/15 aria-pressed:text-star"
+                >
+                  {c.label}
+                  <span class="ml-1 text-haze/60">{counts.get(c.id)}</span>
+                </button>
+              ))
+            }
+          </div>
+
+          <p class="mt-3.5 font-mono text-[11px] tracking-wide text-haze" data-count aria-live="polite">
+            {entries.length} examples across {chips.length} categories
+          </p>
+        </div>
+      </section>
+
+      {after.map((entry) => <SwipeCard entry={entry} />)}
+    </div>
+
+    <div class="hidden py-20 text-center" data-empty>
+      <p class="font-mono text-sm text-haze">Nothing out here.</p>
+      <p class="mt-2 text-haze/70">
+        No example matches that yet.
+        <button type="button" data-clear class="text-chalk underline decoration-plasma underline-offset-4">
+          Clear the search
+        </button>
+      </p>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  /*
+    Row-based bento. Tiny auto-rows plus a per-card row span is what lets cards
+    of different heights sit in a real grid instead of a column flow — and a real
+    grid is what makes it possible to drop the search into the middle of it.
+  */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 1px rows with no row-gap. Each item spans exactly its own height plus one
+       12px gutter, so the space below a card always matches the space beside it.
+       Quantising to bigger rows rounds heights up and leaves uneven slack. */
+    grid-auto-rows: 1px;
+    row-gap: 0;
+    column-gap: 12px;
+    align-items: start;
+    /* Backfills the gaps that pinning the search card to the middle columns
+       would otherwise leave behind. */
+    grid-auto-flow: row dense;
+  }
+  @media (min-width: 640px)  { .board { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .board { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1536px) { .board { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+  /* Sized by the same measuring pass as the cards; this span is the pre-JS
+     estimate. Placement is explicit so it lands in the middle columns rather
+     than wherever auto-flow happens to drop it. */
+  .search-card {
+    grid-column: 1 / span 2;
+    /* Pre-JS estimate in the new 1px row unit; corrected on measure. */
+    grid-row: span 360;
+    /* Two columns is too narrow for a centred slot, so on phones it goes first. */
+    order: -1;
+  }
+  @media (min-width: 640px) {
+    /* Three columns has no true centre for a two-wide card, so it spans the lot
+       and gets rows of cards above and below instead. */
+    .search-card { order: 0; grid-column: 1 / span 3; }
+  }
+  @media (min-width: 1024px) { .search-card { grid-column: 2 / span 2; } }
+  @media (min-width: 1536px) { .search-card { grid-column: 2 / span 3; } }
+
+  .search-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--color-gold) 30%, transparent),
+      0 18px 60px -24px color-mix(in oklab, var(--color-gold) 45%, transparent);
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  /**
+   * Once per document, not once per init, and parked on `window` rather than in
+   * module scope: this script is evaluated more than once per load, so a module
+   * `let` resets and the later pass drags the reader back to the middle every
+   * time they scroll to the top.
+   */
+  const CENTRED = '__copyGalaxyCentred';
+
+  function initSwipeFilter() {
+    const input = document.querySelector<HTMLInputElement>('#search');
+    const grid = document.querySelector<HTMLElement>('#grid');
+    if (!input || !grid) return;
+
+    const cards = [...document.querySelectorAll<HTMLAnchorElement>('[data-card]')];
+    // Everything the grid has to find a row span for, search card included.
+    const measured = [...document.querySelectorAll<HTMLElement>('[data-card], [data-measure]')];
+    const chips = [...document.querySelectorAll<HTMLButtonElement>('[data-chip]')];
+    const countEl = document.querySelector<HTMLElement>('[data-count]');
+    const emptyEl = document.querySelector<HTMLElement>('[data-empty]');
+    const glow = document.querySelector<HTMLElement>('[data-search-glow]');
+    const total = cards.length;
+    let active: string | null = null;
+
+    const GAP = 12;
+
+    /**
+     * Replace each card's build-time row-span estimate with its measured height.
+     * Cards keep their screenshot's real aspect ratio, so their heights vary and
+     * the grid needs to be told what they actually came out as.
+     */
+    const measure = () => {
+      for (const el of measured) {
+        if (el.hidden) continue;
+        el.style.gridRow = '';
+        const h = el.getBoundingClientRect().height;
+        if (h > 0) el.style.gridRow = `span ${Math.ceil(h) + GAP}`;
+      }
+    };
+
+    const apply = () => {
+      const terms = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      let shown = 0;
+
+      for (const card of cards) {
+        const hay = card.dataset.search ?? '';
+        const matchesText = terms.every((t) => hay.includes(t));
+        const matchesCat = !active || card.dataset.category === active;
+        const visible = matchesText && matchesCat;
+        card.hidden = !visible;
+        if (visible) shown++;
+      }
+
+      if (countEl) {
+        countEl.textContent =
+          shown === total && !active && !terms.length
+            ? `${total} examples across ${chips.length} categories`
+            : `${shown} ${shown === 1 ? 'match' : 'matches'}`;
+      }
+      emptyEl?.classList.toggle('hidden', shown > 0);
+      glow?.classList.toggle('opacity-100', terms.length > 0);
+      measure();
+    };
+
+    input.addEventListener('input', apply);
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        active = active === chip.dataset.chip ? null : (chip.dataset.chip ?? null);
+        for (const c of chips) c.setAttribute('aria-pressed', String(c.dataset.chip === active));
+        apply();
+      });
+    }
+
+    document.querySelector('[data-clear]')?.addEventListener('click', () => {
+      input.value = '';
+      active = null;
+      for (const c of chips) c.setAttribute('aria-pressed', 'false');
+      apply();
+      input.focus();
+    });
+
+    const onKey = (e: KeyboardEvent) => {
+      const typing = document.activeElement?.tagName === 'INPUT';
+      if (e.key === '/' && !typing) {
+        e.preventDefault();
+        input.focus();
+        input.select();
+      } else if (e.key === 'Escape' && typing) {
+        if (input.value) {
+          input.value = '';
+          apply();
+        } else {
+          input.blur();
+        }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+
+    // Images settle after first paint, and column width changes on resize.
+    const onResize = () => measure();
+    window.addEventListener('resize', onResize);
+    for (const img of grid.querySelectorAll('img')) {
+      if (!img.complete) img.addEventListener('load', measure, { once: true });
+    }
+    if (document.fonts?.ready) document.fonts.ready.then(measure);
+
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        document.removeEventListener('keydown', onKey);
+        window.removeEventListener('resize', onResize);
+      },
+      { once: true },
+    );
+
+    const examples: string[] = JSON.parse(input.dataset.placeholders ?? '[]');
+    if (examples.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      let i = 0;
+      const timer = setInterval(() => {
+        if (document.activeElement === input || input.value) return;
+        input.placeholder = `Try "${examples[i++ % examples.length]}"…`;
+      }, 2600);
+      document.addEventListener('astro:before-swap', () => clearInterval(timer), { once: true });
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    const c = params.get('c');
+    if (q) input.value = q;
+    if (c && chips.some((chip) => chip.dataset.chip === c)) {
+      active = c;
+      for (const chip of chips) chip.setAttribute('aria-pressed', String(chip.dataset.chip === c));
+    }
+    apply();
+
+    /**
+     * Open with the search at eye level rather than at the top of the document,
+     * so the board extends above it as well as below and you land inside the
+     * collection instead of on top of it. Skipped whenever the browser or a deep
+     * link already has an opinion about where the page should be.
+     */
+    const centreOnSearch = () => {
+      if ((window as any)[CENTRED]) return;
+      const card = document.querySelector<HTMLElement>('.search-card');
+      // A deep link, or a reader who has already scrolled, outranks this.
+      if (!card || q || c || window.scrollY > 0) {
+        (window as any)[CENTRED] = true;
+        return;
+      }
+      const box = card.getBoundingClientRect();
+      const target = window.scrollY + box.top + box.height / 2 - window.innerHeight / 2;
+      // Layout not settled yet — leave it for the next attempt.
+      if (target <= 24) return;
+      (window as any)[CENTRED] = true;
+      // The page sets scroll-behavior: smooth for anchor links, which turns this
+      // opening jump into a visible animated scroll. Suppress it for the jump
+      // itself rather than relying on the behavior option to win.
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
+      window.scrollTo(0, target);
+      root.style.scrollBehavior = previous;
+    };
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+    // Wait for the eager images — the ones above and around the search — to
+    // resolve first. Centring against build-time size estimates aims at where
+    // the card used to be, not where it ends up.
+    const eager = [...grid.querySelectorAll<HTMLImageElement>('img[loading="eager"]')];
+    Promise.all(
+      eager.map((img) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              img.addEventListener('load', () => resolve(), { once: true });
+              img.addEventListener('error', () => resolve(), { once: true });
+            }),
+      ),
+    ).then(() => {
+      measure();
+      // setTimeout rather than requestAnimationFrame: rAF is suspended while a
+      // document is hidden (background tab, prerender), which would leave the
+      // page stuck at the top for anyone who opens it in a new tab. The
+      // getBoundingClientRect inside forces layout anyway, so a frame boundary
+      // buys nothing here.
+      setTimeout(centreOnSearch, 0);
+    });
+
+    if (document.readyState === 'complete') {
+      setTimeout(centreOnSearch, 0);
+    } else {
+      window.addEventListener('load', () => setTimeout(centreOnSearch, 0), { once: true });
+    }
+  }
+
+  initSwipeFilter();
+  document.addEventListener('astro:page-load', initSwipeFilter);
+</script>
