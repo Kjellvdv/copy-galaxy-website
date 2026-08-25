@@ -41,6 +41,14 @@ jobs:
           fi
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
+          # TEMP DIAGNOSTIC: report which certificate the FTP server presents,
+          # so FTP_HOST can be pointed at a name that actually validates.
+          echo "--- certificate presented on port 21 ---"
+          timeout 15 openssl s_client -connect "${FTP_HOST}:21" -starttls ftp </dev/null 2>/dev/null \
+            | openssl x509 -noout -subject -issuer -ext subjectAltName 2>/dev/null \
+            || echo "(could not read certificate)"
+          echo "--- end certificate ---"
+
           # mirror --reverse --delete makes the remote directory match dist/
           # exactly. Anything already in FTP_TARGET_DIR that is not in dist/
           # gets removed, so make sure that directory holds nothing else.
