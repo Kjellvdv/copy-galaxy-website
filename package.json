@@ -8,7 +8,6 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "deploy": "bash scripts/deploy.sh",
     "og": "node scripts/make-og.mjs"
   },
   "dependencies": {

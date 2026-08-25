@@ -5,12 +5,19 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. Queue rather than cancel, so a push that lands
+# mid-deploy still ends up published.
 concurrency:
-  group: deploy
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -23,42 +30,19 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Upload dist/ to SiteGround
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          # lftp reads this itself via --env-password, so the password never
-          # appears in a command line or process listing.
-          LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          # Repo variable, not a secret, so the target is visible in the UI.
-          # Point it at a staging folder until you are ready to go live.
-          FTP_TARGET_DIR: ${{ vars.FTP_TARGET_DIR }}
-        run: |
-          set -euo pipefail
-          if [ -z "${FTP_TARGET_DIR:-}" ]; then
-            echo "::error::FTP_TARGET_DIR repository variable is not set. Refusing to guess a target directory."
-            exit 1
-          fi
-          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      # dist/ carries public/CNAME through to the artifact, which is what keeps
+      # the custom domain bound. Setting the domain only in repo settings can be
+      # cleared by a later deploy that ships no CNAME file.
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./dist
 
-          # TEMP DIAGNOSTIC: have lftp report the certificate it is shown, and
-          # confirm the credentials work, with verification off for this probe only.
-
-          # mirror --reverse --delete makes the remote directory match dist/
-          # exactly. Anything already in FTP_TARGET_DIR that is not in dist/
-          # gets removed, so make sure that directory holds nothing else.
-          # Bash has to expand these before lftp sees them — lftp does no
-          # variable expansion of its own, so escaping the dollars sends it the
-          # literal string "$FTP_HOST" and it fails to resolve a host by that name.
-          lftp -c "
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            set ssl:verify-certificate true;
-            set net:max-retries 3;
-            set net:timeout 20;
-            open --env-password -u '${FTP_USER}' '${FTP_HOST}';
-            mirror --reverse --delete --parallel=4 --verbose=1 \
-              --exclude-glob .well-known/ \
-              dist/ '${FTP_TARGET_DIR}';
-          "
-          echo "Deployed to $FTP_TARGET_DIR"
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
