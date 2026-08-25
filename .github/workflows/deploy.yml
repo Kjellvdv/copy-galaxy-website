@@ -45,12 +45,13 @@ jobs:
           # confirm the credentials work, with verification off for this probe only.
           echo "--- probe ---"
           lftp -c "
-            set ftp:ssl-force true;
-            set ssl:verify-certificate no;
-            open --env-password -u '${FTP_USER}' '${FTP_HOST}';
-            echo '== pwd ==';   pwd;
-            echo '== ls / =='; cls -l /;
-            echo '== ls target =='; (cls -l '${FTP_TARGET_DIR}' || echo 'TARGET DOES NOT EXIST');
+            set ftp:ssl-force true
+            set ssl:verify-certificate no
+            open --env-password -u '${FTP_USER}' '${FTP_HOST}'
+            echo '== /thecopygalaxy.com =='
+            cls -l /thecopygalaxy.com/
+            echo '== /thecopygalaxy.com/public_html =='
+            cls -l /thecopygalaxy.com/public_html/
           " 2>&1 | grep -viE "certificate|^WARNING" | head -40 || true
           echo "--- end probe ---"
 
