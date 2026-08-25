@@ -25,11 +25,12 @@ echo "This makes the remote directory match dist/ exactly, deleting anything els
 read -r -p "Continue? [y/N] " reply
 [ "$reply" = "y" ] || { echo "Aborted."; exit 1; }
 
+export LFTP_PASSWORD="$FTP_PASSWORD"
 lftp -c "
   set ftp:ssl-force true;
   set ftp:ssl-protect-data true;
   set ssl:verify-certificate true;
-  open -u \"$FTP_USER\",\"$FTP_PASSWORD\" \"$FTP_HOST\";
-  mirror --reverse --delete --parallel=4 --verbose=1 dist/ \"$FTP_TARGET_DIR\";
+  open --env-password -u '$FTP_USER' '$FTP_HOST';
+  mirror --reverse --delete --parallel=4 --verbose=1 dist/ '$FTP_TARGET_DIR';
 "
 echo "Done."

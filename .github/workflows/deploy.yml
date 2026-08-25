@@ -27,7 +27,9 @@ jobs:
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          # lftp reads this itself via --env-password, so the password never
+          # appears in a command line or process listing.
+          LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           # Repo variable, not a secret, so the target is visible in the UI.
           # Point it at a staging folder until you are ready to go live.
           FTP_TARGET_DIR: ${{ vars.FTP_TARGET_DIR }}
@@ -42,15 +44,18 @@ jobs:
           # mirror --reverse --delete makes the remote directory match dist/
           # exactly. Anything already in FTP_TARGET_DIR that is not in dist/
           # gets removed, so make sure that directory holds nothing else.
+          # Bash has to expand these before lftp sees them — lftp does no
+          # variable expansion of its own, so escaping the dollars sends it the
+          # literal string "$FTP_HOST" and it fails to resolve a host by that name.
           lftp -c "
             set ftp:ssl-force true;
             set ftp:ssl-protect-data true;
             set ssl:verify-certificate true;
             set net:max-retries 3;
             set net:timeout 20;
-            open -u \"\$FTP_USER\",\"\$FTP_PASSWORD\" \"\$FTP_HOST\";
+            open --env-password -u '${FTP_USER}' '${FTP_HOST}';
             mirror --reverse --delete --parallel=4 --verbose=1 \
               --exclude-glob .well-known/ \
-              dist/ \"\$FTP_TARGET_DIR\";
+              dist/ '${FTP_TARGET_DIR}';
           "
           echo "Deployed to $FTP_TARGET_DIR"
