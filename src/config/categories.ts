@@ -20,6 +20,7 @@ export const CATEGORIES: Category[] = [
   { id: 'customer-profile', label: 'customer profiles',accent: '#e879f9' },
   { id: 'process',          label: 'process',          accent: '#60a5fa' },
   { id: 'pricing',          label: 'pricing',          accent: '#34d399' },
+  { id: 'self-check',       label: 'self-checks',      accent: '#a3e635' },
 ];
 
 export const DEFAULT_CATEGORY: Category = {

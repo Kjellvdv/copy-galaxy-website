@@ -59,6 +59,11 @@ export const INDUSTRIES: Industry[] = [
     aliases: ['hr', 'hrtech', 'l&d', 'leadership', 'training', 'learning', 'workplace'],
   },
   {
+    id: 'consulting',
+    label: 'consulting',
+    aliases: ['advisory', 'agency', 'gtm', 'go-to-market', 'b2b', 'services', 'fractional', 'freelance', 'positioning'],
+  },
+  {
     id: 'customer-service',
     label: 'customer service',
     aliases: ['support', 'saas', 'b2b', 'contact centre', 'contact center'],

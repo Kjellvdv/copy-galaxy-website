@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SwipeCard from '../components/SwipeCard.astro';
+import Starfield from '../components/Starfield.astro';
 import { CATEGORIES } from '../config/categories';
 
 const entries = (await getCollection('swipe')).sort(
@@ -36,7 +37,12 @@ const after = entries.slice(SEARCH_SLOT);
   title="The Copy Galaxy — a swipe file of web design best practices"
   description="A searchable swipe file of landing page patterns worth stealing: hero sections, social proof, calls to action, customer profiles, process and pricing. Real examples, screenshotted and picked apart."
 >
-  <nav class="flex items-center justify-between px-4 py-4">
+  <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+    <div class="nebula absolute inset-x-0 top-0 h-[90vh]"></div>
+    <Starfield count={160} class="opacity-80" />
+  </div>
+
+  <nav class="relative z-10 flex items-center justify-between px-4 py-4">
     <a href="/" class="group flex items-center gap-2.5">
       <span
         class="inline-block h-2.5 w-2.5 rounded-full bg-plasma shadow-[0_0_14px_3px] shadow-plasma/60"
@@ -50,8 +56,8 @@ const after = entries.slice(SEARCH_SLOT);
     >
   </nav>
 
-  <main id="main">
-    <div id="grid" class="board p-3 pb-24">
+  <main id="main" class="relative z-10">
+    <div id="grid" class="board p-4 pb-28">
       {before.map((entry) => <SwipeCard entry={entry} eager />)}
 
       <!-- Same border, radius and surface as every other card. Just bigger. -->
@@ -150,7 +156,7 @@ const after = entries.slice(SEARCH_SLOT);
        Quantising to bigger rows rounds heights up and leaves uneven slack. */
     grid-auto-rows: 1px;
     row-gap: 0;
-    column-gap: 12px;
+    column-gap: 18px;
     align-items: start;
     /* Backfills the gaps that pinning the search card to the middle columns
        would otherwise leave behind. */
@@ -214,7 +220,7 @@ const after = entries.slice(SEARCH_SLOT);
     const total = cards.length;
     let active: string | null = null;
 
-    const GAP = 12;
+    const GAP = 18;
 
     /**
      * Replace each card's build-time row-span estimate with its measured height.

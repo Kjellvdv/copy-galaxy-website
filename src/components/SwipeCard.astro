@@ -24,7 +24,7 @@ const ratio = +(screenshot.width / screenshot.height).toFixed(4);
  * measurements once images have laid out, but shipping an estimate means the
  * grid is close to right on first paint and still readable with JS switched off.
  */
-const GAP = 12;
+const GAP = 18;
 const META = 88;
 const estHeight = 300 / ratio + META;
 // Rows are 1px with no row-gap, so the span is just height plus one gutter.
@@ -39,7 +39,7 @@ const haystack = [title, company, cat.label, category, ind.label, ind.id, ...ind
 
 <a
   href={`/swipe/${entry.id}/`}
-  class="swipe-card group block overflow-hidden rounded-2xl border border-edge bg-surface"
+  class="swipe-card group block overflow-hidden rounded-2xl border border-edge bg-surface/75 backdrop-blur-sm"
   style={`--accent:${cat.accent}; grid-row: span ${rowSpan}`}
   data-card
   data-category={category}
