@@ -21,6 +21,7 @@ export const CATEGORIES: Category[] = [
   { id: 'process',          label: 'process',          accent: '#60a5fa' },
   { id: 'pricing',          label: 'pricing',          accent: '#34d399' },
   { id: 'self-check',       label: 'self-checks',      accent: '#a3e635' },
+  { id: 'error-page',       label: '404 pages',        accent: '#fb7185' },
 ];
 
 export const DEFAULT_CATEGORY: Category = {
